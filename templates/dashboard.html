@@ -1,9 +1,82 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <div class="container mt-4">
-    <h2>Witaj, {{ session['user_name'] }}!</h2>
-    <p>To jest Twój dashboard użytkownika.</p>
+
+<div class="container mt-4">
+  <h2>Witaj, {{ session['user_name'] }}!</h2>
+  <div class="mb-3">
+    <a href="{{ url_for('create_budget') }}" class="btn btn-primary me-2">Stwórz Budżet</a>
     <a href="{{ url_for('logout') }}" class="btn btn-danger">Wyloguj się</a>
   </div>
+  <hr>
+
+  <div class="row">
+    <!-- Lewa kolumna: Kategorie -->
+    <div class="col-md-6">
+      <h4>Kategorie i wydatki</h4>
+
+      <!-- Formularz dodania wydatku -->
+      <form method="post" action="/add_expense" class="mb-4">
+        <input type="hidden" name="budget_id" value="{{ selected_budget['id'] if selected_budget }}">
+        <div class="mb-2">
+          <select name="category" class="form-select" required>
+            {% for cat in predefined_categories %}
+              <option value="{{ cat.name }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <input type="number" name="amount" step="0.01" class="form-control" placeholder="Kwota" required>
+        </div>
+        <button class="btn btn-success">Dodaj wydatek</button>
+      </form>
+
+      <!-- Paski z kategoriami -->
+      {% for c in category_data %}
+        <div class="mb-3 p-2 border rounded" style="border-color: {{ c.color }};">
+          <div class="d-flex justify-content-between">
+            <strong>{{ c.name }}</strong>
+            <span>{{ c.spent }}/{{ c.limit }} zł</span>
+          </div>
+          <div class="progress mt-1" style="height: 20px; border-radius: 10px;">
+            <div class="progress-bar" role="progressbar"
+                style="
+                  width: {{ (c.spent / c.limit * 100) if c.limit > 0 else 0 }}%;
+                  background-color: {{ c.color }};
+                  border-radius: 10px;
+                ">
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Prawa kolumna: Historia budżetów -->
+    <div class="col-md-6">
+      <h4>Historia budżetów</h4>
+      {% if budgets %}
+        <table class="table table-striped mt-3">
+          <thead>
+            <tr>
+              <th>Rok</th>
+              <th>Miesiąc</th>
+              <th>Dochód</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for budget in budgets %}
+              <tr>
+                <td>{{ budget['year'] }}</td>
+                <td>{{ budget['month'] }}</td>
+                <td>{{ budget['income'] }} zł</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Brak zapisanych budżetów.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 {% endblock %}

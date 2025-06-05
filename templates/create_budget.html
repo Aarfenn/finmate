@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Stwórz / Edytuj Budżet</h2>
+
+    <form method="POST">
+      <div class="mb-3">
+        <label for="year">Rok</label>
+        <input type="number" class="form-control" id="year" name="year" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="month">Miesiąc (1-12)</label>
+        <input type="number" class="form-control" id="month" name="month" min="1" max="12" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="income">Dochód</label>
+        <input type="number" step="0.01" class="form-control" id="income" name="income" required>
+      </div>
+
+      <button type="submit" class="btn btn-success">Zapisz budżet</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Anuluj</a>
+    </form>
+  </div>
+{% endblock %}
