@@ -214,5 +214,64 @@ def add_expense():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/dashboard/<int:budget_id>')
+def dashboard_preview(budget_id):
+    if 'user_id' not in session:
+        flash('Musisz się zalogować.')
+        return redirect(url_for('index'))
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    budgets = conn.execute(
+        'SELECT * FROM budgets WHERE user_id = ? ORDER BY year DESC, month DESC',
+        (user_id,)
+    ).fetchall()
+
+    selected_budget = conn.execute(
+        'SELECT * FROM budgets WHERE id = ? AND user_id = ?',
+        (budget_id, user_id)
+    ).fetchone()
+
+    if not selected_budget:
+        flash('Nie znaleziono budżetu.')
+        return redirect(url_for('dashboard'))
+
+    category_data = []
+    for cat in PREDEFINED_CATEGORIES:
+        # Pobierz limit
+        limit_row = conn.execute(
+            'SELECT limit_amount FROM category_limits WHERE budget_id = ? AND category_name = ?',
+            (selected_budget['id'], cat['name'])
+        ).fetchone()
+        limit = limit_row['limit_amount'] if limit_row else 0
+
+        # Pobierz wydatki
+        spent_row = conn.execute(
+            '''SELECT SUM(amount) as total FROM expenses
+               WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
+            (selected_budget['id'], user_id, get_category_id(cat['name'], conn))
+        ).fetchone()
+
+        spent = spent_row['total'] if spent_row['total'] else 0
+
+        category_data.append({
+            'name': cat['name'],
+            'color': cat['color'],
+            'limit': limit,
+            'spent': spent
+        })
+
+    conn.close()
+
+    return render_template(
+        'dashboard.html',
+        budgets=budgets,
+        category_data=category_data,
+        selected_budget=selected_budget,
+        predefined_categories=PREDEFINED_CATEGORIES
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True)

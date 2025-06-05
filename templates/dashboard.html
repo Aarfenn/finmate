@@ -12,7 +12,14 @@
   <div class="row">
     <!-- Lewa kolumna: Kategorie -->
     <div class="col-md-6">
-      <h4>Kategorie i wydatki</h4>
+        <h4>
+            {% if selected_budget %}
+                Kategorie i wydatki dla {{ "%04d" | format(selected_budget.year) }}/{{ "%02d" | format(selected_budget.month) }}
+            {% else %}
+                Kategorie i wydatki
+            {% endif %}
+        </h4>
+
 
       <!-- Formularz dodania wydatku -->
       <form method="post" action="/add_expense" class="mb-4">
@@ -55,22 +62,27 @@
       <h4>Historia budżetów</h4>
       {% if budgets %}
         <table class="table table-striped mt-3">
-          <thead>
+        <thead>
+        <tr>
+            <th>Rok</th>
+            <th>Miesiąc</th>
+            <th>Dochód</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for budget in budgets %}
             <tr>
-              <th>Rok</th>
-              <th>Miesiąc</th>
-              <th>Dochód</th>
+            <td>{{ budget['year'] }}</td>
+            <td>{{ budget['month'] }}</td>
+            <td>{{ budget['income'] }} zł</td>
+            <td>
+                <a href="{{ url_for('dashboard_preview', budget_id=budget['id']) }}" class="btn btn-outline-primary btn-sm">Podgląd</a>
+            </td>
             </tr>
-          </thead>
-          <tbody>
-            {% for budget in budgets %}
-              <tr>
-                <td>{{ budget['year'] }}</td>
-                <td>{{ budget['month'] }}</td>
-                <td>{{ budget['income'] }} zł</td>
-              </tr>
-            {% endfor %}
-          </tbody>
+        {% endfor %}
+        </tbody>
+
         </table>
       {% else %}
         <p>Brak zapisanych budżetów.</p>
