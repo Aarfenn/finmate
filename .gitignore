@@ -20,3 +20,6 @@ __pycache__/
 # Pliki systemowe (Windows / macOS)
 .DS_Store
 Thumbs.db
+
+# Klucz tajny
+.env

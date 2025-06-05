@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Witaj, {{ session['user_name'] }}!</h2>
+    <p>To jest Twój dashboard użytkownika.</p>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger">Wyloguj się</a>
+  </div>
+{% endblock %}

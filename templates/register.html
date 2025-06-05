@@ -2,6 +2,15 @@
 
 {% block content %}
   <h2>Zarejestruj się</h2>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for message in messages %}
+        <div style="color: red;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   <form method="post" action="/register">
     <div class="mb-3">
       <label>Imię i nazwisko</label>
@@ -17,4 +26,5 @@
     </div>
     <button type="submit" class="btn btn-primary">Zarejestruj</button>
   </form>
+  <p>Masz już konto? <a href="{{ url_for('index') }}">Zaloguj się tutaj</a></p>
 {% endblock %}
