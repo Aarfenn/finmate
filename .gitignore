@@ -1,0 +1,22 @@
+# Plik bazy danych (lokalny, dynamiczny)
+users.db
+
+# Środowisko wirtualne Pythona
+.venv/
+venv/
+
+# PyCharm IDE
+.idea/
+
+# Pliki tymczasowe Pythona
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logi
+*.log
+
+# Pliki systemowe (Windows / macOS)
+.DS_Store
+Thumbs.db
