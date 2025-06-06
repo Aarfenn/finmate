@@ -131,13 +131,38 @@ def dashboard():
     user_id = session['user_id']
     conn = get_db_connection()
 
-    budgets = conn.execute(
+    budget_rows = conn.execute(
         'SELECT * FROM budgets WHERE user_id = ? ORDER BY year DESC, month DESC',
         (user_id,)
     ).fetchall()
 
+    budgets = []
+    for b in budget_rows:
+        total_expenses = conn.execute(
+            'SELECT SUM(amount) as total FROM expenses WHERE budget_id = ? AND user_id = ?',
+            (b['id'], user_id)
+        ).fetchone()['total'] or 0
+
+        balance = b['income'] - total_expenses
+        budgets.append({
+            'id': b['id'],
+            'year': b['year'],
+            'month': b['month'],
+            'income': b['income'],
+            'balance': balance
+        })
+
     selected_budget = budgets[0] if budgets else None
     category_data = []
+
+    total_income = sum(b['income'] for b in budgets)
+
+    total_expenses = conn.execute(
+        'SELECT SUM(amount) as total FROM expenses WHERE user_id = ?',
+        (user_id,)
+    ).fetchone()['total'] or 0
+
+    balance = total_income - total_expenses
 
     if selected_budget:
         for cat in PREDEFINED_CATEGORIES:
@@ -168,9 +193,11 @@ def dashboard():
     return render_template(
         'dashboard.html',
         budgets=budgets,
+        balance=balance,
         category_data=category_data,
         selected_budget=selected_budget,
         predefined_categories=PREDEFINED_CATEGORIES
+
     )
 
 
@@ -232,14 +259,14 @@ def add_expense():
     budget_id = int(request.form['budget_id'])
 
     conn = get_db_connection()
-    print("Kategorie:", category_name, "User ID:", user_id)  # <=======>  TYMCZASOWY DEBUG  <=======>
+    print("Kategorie:", category_name, "User ID:", user_id)
     category_id = get_category_id(category_name, conn, user_id)
 
     if category_id:
         print("Dodano wydatek:", user_id, budget_id, category_id, amount)  # <- Debug!
         conn.execute(
             'INSERT INTO expenses (user_id, budget_id, category_id, amount) VALUES (?, ?, ?, ?)',
-            (user_id, budget_id, category_id, amount)    # <=======>  TYMCZASOWY DEBUG  <=======>
+            (user_id, budget_id, category_id, amount)
         )
         conn.commit()
         conn.close()
@@ -259,10 +286,26 @@ def dashboard_preview(budget_id):
     user_id = session['user_id']
     conn = get_db_connection()
 
-    budgets = conn.execute(
+    budget_rows = conn.execute(
         'SELECT * FROM budgets WHERE user_id = ? ORDER BY year DESC, month DESC',
         (user_id,)
     ).fetchall()
+
+    budgets = []
+    for b in budget_rows:
+        total_expenses = conn.execute(
+            'SELECT SUM(amount) as total FROM expenses WHERE budget_id = ? AND user_id = ?',
+            (b['id'], user_id)
+        ).fetchone()['total'] or 0
+
+        balance = b['income'] - total_expenses
+        budgets.append({
+            'id': b['id'],
+            'year': b['year'],
+            'month': b['month'],
+            'income': b['income'],
+            'balance': balance
+        })
 
     selected_budget = conn.execute(
         'SELECT * FROM budgets WHERE id = ? AND user_id = ?',
@@ -273,6 +316,7 @@ def dashboard_preview(budget_id):
         flash('Nie znaleziono budżetu.')
         return redirect(url_for('dashboard'))
 
+    # oblicz kategorię i wydatki tak jak wcześniej
     category_data = []
     for cat in PREDEFINED_CATEGORIES:
         limit_row = conn.execute(
@@ -292,7 +336,6 @@ def dashboard_preview(budget_id):
         else:
             spent = 0
 
-        # spent = spent_row['total'] if spent_row['total'] else 0
         category_data.append({
             'name': cat['name'],
             'color': cat['color'],
@@ -300,18 +343,23 @@ def dashboard_preview(budget_id):
             'spent': spent
         })
 
+    total_income = selected_budget['income']
+    total_expenses = sum(cat['spent'] for cat in category_data)
+    balance = total_income - total_expenses
+
     conn.close()
 
     return render_template(
         'dashboard.html',
         budgets=budgets,
+        balance=balance,
         category_data=category_data,
         selected_budget=selected_budget,
         predefined_categories=PREDEFINED_CATEGORIES
     )
 
 
-# >-------------------------   Obsługa zmiany zawartości panelu podglądu wybranego budżetu   -------------------------<
+# >-------------------------   Ustawienie limitu dal kategorii   -------------------------<
 @app.route('/set_limit', methods=['POST'])
 def set_limit():
     if 'user_id' not in session:

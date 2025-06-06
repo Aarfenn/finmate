@@ -1,37 +1,45 @@
-/* Flash message (np. błędy logowania) */
 .flash-message {
-  color: red;
+  color: #ff6b6b;
   margin-bottom: 1em;
 }
 
-/* Panel kategorii */
 .category-box {
-  border: 2px solid;
+  border: 2px solid #444;
   border-radius: 8px;
   padding: 1em;
   margin-bottom: 1em;
+  background-color: #222;
+  color: #eee;
 }
 
-/* Progres z zaokrągleniami */
 .custom-progress {
   height: 20px;
   border-radius: 10px;
+  background-color: #333;
 }
 
 .progress-custom-bar {
   border-radius: 10px;
+  background-color: #4caf50;
 }
 
-/* Przycisk ustawień */
 .gear-link {
   text-decoration: none;
   font-size: 1.1em;
   cursor: pointer;
+  color: #bbb;
 }
 
-/* Formularz limitu */
+.gear-link:hover {
+  color: #fff;
+}
+
 .limit-form {
   display: none;
+  background-color: #222;
+  padding: 1em;
+  border-radius: 8px;
+  color: #eee;
 }
 
 .limit-form.visible {
@@ -40,10 +48,23 @@
 
 .limit-form input {
   max-width: 150px;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.3em 0.5em;
+  border-radius: 4px;
+}
+
+.limit-form input::placeholder {
+  color: #888;
 }
 
 .expense-form {
   display: none;
+  background-color: #222;
+  padding: 1em;
+  border-radius: 8px;
+  color: #eee;
 }
 
 .expense-form.visible {
@@ -52,9 +73,111 @@
 
 .expense-form input {
   max-width: 150px;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.3em 0.5em;
+  border-radius: 4px;
+}
+
+.expense-form input::placeholder {
+  color: #888;
+}
+
+body {
+  background-color: #121212;
+  color: #ddd;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- Tabela Historia budżetów --- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table th, .table td {
+  padding: 0.75em 1em;
+  text-align: left;
+}
+
+a.btn.btn-outline-primary {
+  padding: 0.3em 0.8em;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .progress {
   position: relative;
   overflow: hidden;
+  background-color: #333;
+  border-radius: 10px;
+}
+
+input, select, textarea {
+  background-color: #333;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.4em 0.6em;
+  border-radius: 4px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px #4caf50;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #222;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #4caf50;
+  border-radius: 10px;
+}
+
+button, input[type="submit"] {
+  background-color: #4caf50;
+  border: none;
+  color: #121212;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+button:hover, input[type="submit"]:hover {
+  background-color: #3a9c3a;
+}
+
+h1, h2, h3, h4 {
+  color: #eee;
+}
+
+a {
+  color: #4caf50;
+}
+
+a:hover {
+  color: #80e27e;
+}
+
+.plus-link {
+  text-decoration: none;
+  font-size: 1.2em;
+}
+
+.gear-link {
+  text-decoration: none;
+  font-size: 1.2em;
 }

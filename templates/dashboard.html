@@ -3,10 +3,20 @@
 
 <div class="container mt-4">
   <h2>Witaj, {{ session['user_name'] }}!</h2>
-  <div class="mb-3">
-    <a href="{{ url_for('create_budget') }}" class="btn btn-primary me-2">Stwórz Budżet</a>
-    <a href="{{ url_for('logout') }}" class="btn btn-danger">Wyloguj się</a>
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+      <a href="{{ url_for('create_budget') }}" class="btn btn-primary me-2">Stwórz Budżet</a>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger">Wyloguj się</a>
+    </div>
+    <div>
+      {% if balance >= 0 %}
+        <strong class="text-success">Balans: +{{ "%.2f"|format(balance) }} PLN</strong>
+      {% else %}
+        <strong class="text-danger">Balans: -{{ "%.2f"|format(balance|abs) }} PLN</strong>
+      {% endif %}
+    </div>
   </div>
+
   <hr>
 
   <div class="row">
@@ -86,12 +96,13 @@
     <div class="col-md-6">
       <h4>Historia budżetów</h4>
       {% if budgets %}
-        <table class="table table-striped mt-3">
+        <table class="table table-dark mt-3">
         <thead>
         <tr>
             <th>Rok</th>
             <th>Miesiąc</th>
             <th>Dochód</th>
+            <th>Balans</th>
             <th></th>
         </tr>
         </thead>
@@ -101,8 +112,9 @@
             <td>{{ budget['year'] }}</td>
             <td>{{ budget['month'] }}</td>
             <td>{{ budget['income'] }} zł</td>
+            <td>{{ budget['balance'] | float | round(2) }} zł</td>
             <td>
-                <a href="{{ url_for('dashboard_preview', budget_id=budget['id']) }}" class="btn btn-outline-primary btn-sm">Podgląd</a>
+                <a href="{{ url_for('dashboard_preview', budget_id=budget['id']) }}" class="btn btn-info btn-sm">Podgląd</a>
             </td>
             </tr>
         {% endfor %}
