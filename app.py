@@ -19,7 +19,7 @@ PREDEFINED_CATEGORIES = [
 
 app.secret_key = os.getenv('SECRET_KEY')
 
-# >--------------   Funkcje pomocnicze   --------------<
+# >----------------------------------------------   Funkcje pomocnicze   ---------------------------------------------<
 
 
 def get_db_connection():
@@ -33,8 +33,9 @@ def get_category_id(name, conn):
     return row['id'] if row else None
 
 
-# >--------------   Funkcje pomocnicze   --------------<
+# >----------------------------------------------   Funkcje pomocnicze   ---------------------------------------------<
 
+# >-------------------------------------------   Trasa domyślna logowanie   ------------------------------------------<
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -56,6 +57,7 @@ def index():
     return render_template('login.html')
 
 
+# >----------------------------------   Rejestracja przejście ze strony logowania   ----------------------------------<
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -87,6 +89,7 @@ def register():
     return render_template('register.html')
 
 
+# >------------------------------   Strona główna bosługująca kluczowe funkcjonalności   -----------------------------<
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -106,7 +109,6 @@ def dashboard():
 
     if selected_budget:
         for cat in PREDEFINED_CATEGORIES:
-            # Pobierz limit
             limit_row = conn.execute(
                 'SELECT limit_amount FROM category_limits WHERE budget_id = ? AND category_name = ?',
                 (selected_budget['id'], cat['name'])
@@ -114,7 +116,6 @@ def dashboard():
 
             limit = limit_row['limit_amount'] if limit_row else 0
 
-            # Pobierz wydatki
             spent_row = conn.execute(
                 '''SELECT SUM(amount) as total FROM expenses
                    WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
@@ -141,6 +142,7 @@ def dashboard():
     )
 
 
+# >-------------------------   Obsługa wylogowania po wciśnięciu przycisku na dashboardzie   -------------------------<
 @app.route('/logout')
 def logout():
     session.clear()
@@ -148,6 +150,7 @@ def logout():
     return redirect(url_for('index'))
 
 
+# >-------------------------------   Obsługa przycisku dodawania budżetu do historii   -------------------------------<
 @app.route('/create_budget', methods=['GET', 'POST'])
 def create_budget():
     if 'user_id' not in session:
@@ -160,7 +163,6 @@ def create_budget():
         income = float(request.form['income'])
 
         conn = get_db_connection()
-        # Czy istnieje już budżet na ten miesiąc?
         existing = conn.execute(
             'SELECT id FROM budgets WHERE user_id = ? AND year = ? AND month = ?',
             (session['user_id'], year, month)
@@ -186,6 +188,7 @@ def create_budget():
     return render_template('create_budget.html')
 
 
+# >-------------------------------------------   Dodanie wydatku do listy   ------------------------------------------<
 @app.route('/add_expense', methods=['POST'])
 def add_expense():
     if 'user_id' not in session:
@@ -214,6 +217,7 @@ def add_expense():
     return redirect(url_for('dashboard'))
 
 
+# >-------------------------   Obsługa zmiany zawartości panelu podglądu wybranego budżetu   -------------------------<
 @app.route('/dashboard/<int:budget_id>')
 def dashboard_preview(budget_id):
     if 'user_id' not in session:
@@ -239,14 +243,12 @@ def dashboard_preview(budget_id):
 
     category_data = []
     for cat in PREDEFINED_CATEGORIES:
-        # Pobierz limit
         limit_row = conn.execute(
             'SELECT limit_amount FROM category_limits WHERE budget_id = ? AND category_name = ?',
             (selected_budget['id'], cat['name'])
         ).fetchone()
         limit = limit_row['limit_amount'] if limit_row else 0
 
-        # Pobierz wydatki
         spent_row = conn.execute(
             '''SELECT SUM(amount) as total FROM expenses
                WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
@@ -271,6 +273,40 @@ def dashboard_preview(budget_id):
         selected_budget=selected_budget,
         predefined_categories=PREDEFINED_CATEGORIES
     )
+
+
+# >-------------------------   Obsługa zmiany zawartości panelu podglądu wybranego budżetu   -------------------------<
+@app.route('/set_limit', methods=['POST'])
+def set_limit():
+    if 'user_id' not in session:
+        return {'success': False, 'message': 'Brak autoryzacji.'}, 401
+
+    data = request.get_json()
+    budget_id = data.get('budget_id')
+    category_name = data.get('category_name')
+    limit = float(data.get('limit'))
+
+    conn = get_db_connection()
+    existing = conn.execute(
+        'SELECT id FROM category_limits WHERE budget_id = ? AND category_name = ?',
+        (budget_id, category_name)
+    ).fetchone()
+
+    if existing:
+        conn.execute(
+            'UPDATE category_limits SET limit_amount = ? WHERE id = ?',
+            (limit, existing['id'])
+        )
+    else:
+        conn.execute(
+            'INSERT INTO category_limits (budget_id, category_name, limit_amount) VALUES (?, ?, ?)',
+            (budget_id, category_name, limit)
+        )
+
+    conn.commit()
+    conn.close()
+
+    return {'success': True}
 
 
 if __name__ == '__main__':
