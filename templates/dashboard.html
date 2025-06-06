@@ -10,9 +10,9 @@
     </div>
     <div>
       {% if balance >= 0 %}
-        <strong class="text-success">Balans: +{{ "%.2f"|format(balance) }} PLN</strong>
+        <strong class="text-success">Całkowity balans: +{{ "%.2f"|format(balance) }} PLN</strong>
       {% else %}
-        <strong class="text-danger">Balans: -{{ "%.2f"|format(balance|abs) }} PLN</strong>
+        <strong class="text-danger">Całkowity balans: -{{ "%.2f"|format(balance|abs) }} PLN</strong>
       {% endif %}
     </div>
   </div>

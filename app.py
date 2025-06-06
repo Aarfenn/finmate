@@ -307,6 +307,15 @@ def dashboard_preview(budget_id):
             'balance': balance
         })
 
+    total_income_all = sum(b['income'] for b in budgets)
+    total_expenses_all = conn.execute(
+        'SELECT SUM(amount) as total FROM expenses WHERE user_id = ?',
+        (user_id,)
+    ).fetchone()['total'] or 0
+
+    global_balance = total_income_all - total_expenses_all
+
+
     selected_budget = conn.execute(
         'SELECT * FROM budgets WHERE id = ? AND user_id = ?',
         (budget_id, user_id)
@@ -345,14 +354,15 @@ def dashboard_preview(budget_id):
 
     total_income = selected_budget['income']
     total_expenses = sum(cat['spent'] for cat in category_data)
-    balance = total_income - total_expenses
+    budget_balance = total_income - total_expenses
 
     conn.close()
 
     return render_template(
         'dashboard.html',
         budgets=budgets,
-        balance=balance,
+        balance=global_balance,  # <-- to trzeba dodać
+        budget_balance=budget_balance,
         category_data=category_data,
         selected_budget=selected_budget,
         predefined_categories=PREDEFINED_CATEGORIES
