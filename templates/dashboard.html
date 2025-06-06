@@ -19,48 +19,46 @@
                 Kategorie i wydatki
             {% endif %}
         </h4>
-
-
-      <!-- Formularz dodania wydatku -->
-      <form method="post" action="/add_expense" class="mb-4">
-        <input type="hidden" name="budget_id" value="{{ selected_budget['id'] if selected_budget }}">
-        <div class="mb-2">
-          <select name="category" class="form-select" required>
-            {% for cat in predefined_categories %}
-              <option value="{{ cat.name }}">{{ cat.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="mb-2">
-          <input type="number" name="amount" step="0.01" class="form-control" placeholder="Kwota" required>
-        </div>
-        <button class="btn btn-success">Dodaj wydatek</button>
-      </form>
-
-      <!-- Kategorie -->
+    <!-- Kategorie -->
       {% for c in category_data %}
-        <div class="mb-3 p-2 border rounded" style="border-color: {{ c.color }};">
-          <div class="d-flex justify-content-between">
+        <div class="mb-3 p-2 category-box" data-color="{{ c.color }}">
+          <div class="d-flex justify-content-between align-items-center">
             <strong>{{ c.name }}</strong>
             <div class="d-flex align-items-center gap-2">
               <span id="limit-display-{{ c.name }}" data-spent="{{ c.spent }}" data-limit="{{ c.limit }}">
                 {{ c.spent }}/{{ c.limit }} zł
               </span>
-              <a href="#" onclick="toggleLimitForm('{{ c.name }}')" class="gear-link" title="Ustaw limit">⚙️</a>
+              <a href="#" class="gear-link" data-category="{{ c.name }}" title="Ustaw limit">⚙️</a>
+              <a href="#" class="plus-link" data-category="{{ c.name }}" title="Dodaj wydatek">➕</a>
             </div>
-            <div id="limit-form-{{ c.name }}" class="limit-form mt-2">
-              <input id="limit-input-{{ c.name }}" type="number" step="0.01" class="form-control mb-1" placeholder="Nowy limit">
-              <button type="button" class="btn btn-sm btn-primary" onclick="saveLimit({{ selected_budget['id'] }}, '{{ c.name }}')">Zapisz</button>
-            </div>
-
           </div>
-          <div class="progress mt-1" style="height: 20px; border-radius: 10px;">
-            <div class="progress-bar" role="progressbar"
-                style="
-                  width: {{ (c.spent / c.limit * 100) if c.limit > 0 else 0 }}%;
-                  background-color: {{ c.color }};
-                  border-radius: 10px;
-                ">
+
+          <!-- FORM LIMITU -->
+          <div id="limit-form-{{ c.name }}" class="limit-form mt-2">
+            <input id="limit-input-{{ c.name }}" type="number" step="0.01" class="form-control mb-1" placeholder="Nowy limit">
+            <button type="button" class="btn btn-sm btn-primary save-limit-btn"
+                    data-budget="{{ selected_budget['id'] }}" data-category="{{ c.name }}">
+              Zapisz
+            </button>
+          </div>
+
+          <!-- FORM WYDATKU -->
+          <div id="expense-form-{{ c.name }}" class="expense-form mt-2">
+            <input id="expense-input-{{ c.name }}" type="number" step="0.01" class="form-control mb-1" placeholder="Kwota wydatku">
+            <button type="button" class="btn btn-sm btn-success add-expense-btn"
+                    data-budget="{{ selected_budget['id'] }}" data-category="{{ c.name }}">
+              Dodaj
+            </button>
+          </div>
+          <div class="position-relative progress mt-1 custom-progress">
+            <div class="progress-bar progress-custom-bar position-relative"
+                id="progress-bar-{{ c.name }}"
+                role="progressbar"
+                style="width: {{ (c.spent / c.limit * 100) if c.limit > 0 else 0 }}%; background-color: {{ c.color }}; z-index: 1;">
+            </div>
+            <div class="progress-bar bg-danger position-absolute"
+                id="over-bar-{{ c.name }}"
+                style="width: {% if c.spent > c.limit and c.limit > 0 %}{{ ((c.spent - c.limit) / c.limit) * 100 }}%{% else %}0{% endif %}; height: 100%; left: 0; z-index: 2;">
             </div>
           </div>
         </div>

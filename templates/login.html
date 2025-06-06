@@ -1,26 +1,25 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <h2>Zaloguj się</h2>
+<h2>Zaloguj się</h2>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      {% for message in messages %}
-        <div style="color: red;">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash-message">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-  <form method="post" action="/">
-    <div class="mb-3">
-      <label>E-mail</label>
-      <input type="email" name="email" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label>Hasło</label>
-      <input type="password" name="password" class="form-control" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Zaloguj</button>
-  </form>
-  <p>Nie masz konta? <a href="{{ url_for('register') }}">Zarejestruj się tutaj</a></p>
+<form method="post" action="/">
+  <div class="mb-3">
+    <label>E-mail</label>
+    <input type="email" name="email" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Hasło</label>
+    <input type="password" name="password" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Zaloguj</button>
+</form>
+<p>Nie masz konta? <a href="{{ url_for('register') }}">Zarejestruj się tutaj</a></p>
 {% endblock %}

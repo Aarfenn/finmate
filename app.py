@@ -28,8 +28,11 @@ def get_db_connection():
     return conn
 
 
-def get_category_id(name, conn):
-    row = conn.execute('SELECT id FROM categories WHERE name = ?', (name,)).fetchone()
+def get_category_id(name, conn, user_id):
+    row = conn.execute(
+        'SELECT id FROM categories WHERE name = ? AND user_id = ?',
+        (name, user_id)
+    ).fetchone()
     return row['id'] if row else None
 
 
@@ -44,15 +47,33 @@ def index():
 
         conn = get_db_connection()
         user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
-        conn.close()
 
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['user_name'] = user['name']
+
+            # 🔽 Dodajemy sprawdzenie i uzupełnienie brakujących kategorii
+            existing_categories = conn.execute(
+                'SELECT name FROM categories WHERE user_id = ?',
+                (user['id'],)
+            ).fetchall()
+
+            existing_names = {row['name'] for row in existing_categories}
+
+            for cat in PREDEFINED_CATEGORIES:
+                if cat['name'] not in existing_names:
+                    conn.execute(
+                        'INSERT INTO categories (user_id, name, color, monthly_limit) VALUES (?, ?, ?, ?)',
+                        (user['id'], cat['name'], cat['color'], 0)
+                    )
+            conn.commit()
+            conn.close()
+
             return redirect(url_for('dashboard'))
-        else:
-            flash('Nieprawidłowy e-mail lub hasło.')
-            return redirect(url_for('index'))
+
+        conn.close()
+        flash('Nieprawidłowy e-mail lub hasło.')
+        return redirect(url_for('index'))
 
     return render_template('login.html')
 
@@ -80,6 +101,17 @@ def register():
         hashed_password = generate_password_hash(password)
         conn.execute('INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
                      (name, email, hashed_password))
+        conn.commit()
+
+        user_id = conn.execute('SELECT id FROM users WHERE email = ?', (email,)).fetchone()['id']
+
+        #  Dodanie kategorii do tabeli categories dla nowego użytkownika
+        for cat in PREDEFINED_CATEGORIES:
+            conn.execute(
+                'INSERT INTO categories (user_id, name, color, monthly_limit) VALUES (?, ?, ?, ?)',
+                (user_id, cat['name'], cat['color'], 0)
+            )
+
         conn.commit()
         conn.close()
 
@@ -119,7 +151,7 @@ def dashboard():
             spent_row = conn.execute(
                 '''SELECT SUM(amount) as total FROM expenses
                    WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
-                (selected_budget['id'], user_id, get_category_id(cat['name'], conn))
+                (selected_budget['id'], user_id, get_category_id(cat['name'], conn, user_id))
             ).fetchone()
 
             spent = spent_row['total'] if spent_row['total'] else 0
@@ -192,8 +224,7 @@ def create_budget():
 @app.route('/add_expense', methods=['POST'])
 def add_expense():
     if 'user_id' not in session:
-        flash("Zaloguj się, aby dodać wydatek.")
-        return redirect(url_for('index'))
+        return {'success': False, 'message': 'Brak autoryzacji'}, 401
 
     user_id = session['user_id']
     category_name = request.form['category']
@@ -201,20 +232,21 @@ def add_expense():
     budget_id = int(request.form['budget_id'])
 
     conn = get_db_connection()
-    category_id = get_category_id(category_name, conn)
+    print("Kategorie:", category_name, "User ID:", user_id)  # <=======>  TYMCZASOWY DEBUG  <=======>
+    category_id = get_category_id(category_name, conn, user_id)
 
     if category_id:
+        print("Dodano wydatek:", user_id, budget_id, category_id, amount)  # <- Debug!
         conn.execute(
             'INSERT INTO expenses (user_id, budget_id, category_id, amount) VALUES (?, ?, ?, ?)',
-            (user_id, budget_id, category_id, amount)
+            (user_id, budget_id, category_id, amount)    # <=======>  TYMCZASOWY DEBUG  <=======>
         )
         conn.commit()
-        flash("Wydatek dodany.")
+        conn.close()
+        return {'success': True}
     else:
-        flash("Nie znaleziono kategorii.")
-
-    conn.close()
-    return redirect(url_for('dashboard'))
+        conn.close()
+        return {'success': False, 'message': 'Nie znaleziono kategorii.'}, 400
 
 
 # >-------------------------   Obsługa zmiany zawartości panelu podglądu wybranego budżetu   -------------------------<
@@ -249,14 +281,18 @@ def dashboard_preview(budget_id):
         ).fetchone()
         limit = limit_row['limit_amount'] if limit_row else 0
 
-        spent_row = conn.execute(
-            '''SELECT SUM(amount) as total FROM expenses
-               WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
-            (selected_budget['id'], user_id, get_category_id(cat['name'], conn))
-        ).fetchone()
+        category_id = get_category_id(cat['name'], conn, user_id)
+        if category_id:
+            spent_row = conn.execute(
+                '''SELECT SUM(amount) as total FROM expenses
+                   WHERE budget_id = ? AND user_id = ? AND category_id = ?''',
+                (selected_budget['id'], user_id, category_id)
+            ).fetchone()
+            spent = spent_row['total'] if spent_row['total'] else 0
+        else:
+            spent = 0
 
-        spent = spent_row['total'] if spent_row['total'] else 0
-
+        # spent = spent_row['total'] if spent_row['total'] else 0
         category_data.append({
             'name': cat['name'],
             'color': cat['color'],

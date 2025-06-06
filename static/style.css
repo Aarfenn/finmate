@@ -1,3 +1,35 @@
+/* Flash message (np. błędy logowania) */
+.flash-message {
+  color: red;
+  margin-bottom: 1em;
+}
+
+/* Panel kategorii */
+.category-box {
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+/* Progres z zaokrągleniami */
+.custom-progress {
+  height: 20px;
+  border-radius: 10px;
+}
+
+.progress-custom-bar {
+  border-radius: 10px;
+}
+
+/* Przycisk ustawień */
+.gear-link {
+  text-decoration: none;
+  font-size: 1.1em;
+  cursor: pointer;
+}
+
+/* Formularz limitu */
 .limit-form {
   display: none;
 }
@@ -6,12 +38,23 @@
   display: block;
 }
 
-.gear-link {
-  text-decoration: none;
-  font-size: 1.1em;
-  cursor: pointer;
-}
-
 .limit-form input {
   max-width: 150px;
+}
+
+.expense-form {
+  display: none;
+}
+
+.expense-form.visible {
+  display: block;
+}
+
+.expense-form input {
+  max-width: 150px;
+}
+
+.progress {
+  position: relative;
+  overflow: hidden;
 }
