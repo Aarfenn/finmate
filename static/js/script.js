@@ -131,4 +131,67 @@ document.querySelectorAll(".add-expense-btn").forEach(button => {
             }
         });
     });
+
+    // Rysowanie wykresu kołowego pod kategoriami
+    const canvas = document.getElementById("expensesDoughnutChart");
+
+    if (canvas && typeof categoryData !== "undefined" && typeof budgetIncome !== "undefined") {
+        const labels = [];
+        const data = [];
+        const backgroundColors = [];
+
+        let totalSpent = 0;
+
+        categoryData.forEach(category => {
+            const spent = category.spent || 0;
+
+            // Uwzględniamy tylko główne kategorie
+            if (["jedzenie", "transport", "rozrywka", "rachunki"].includes(category.name.toLowerCase())) {
+            labels.push(category.name.charAt(0).toUpperCase() + category.name.slice(1));
+            data.push(spent);
+            backgroundColors.push(category.color || "#999");
+            }
+
+            totalSpent += spent;
+        });
+
+        // Dodaj wolne środki (reszta z dochodu)
+        const freeFunds = totalIncome - totalSpent;
+
+        if (freeFunds > 0) {
+            labels.push("Wolne środki");
+            data.push(freeFunds);
+            backgroundColors.push("#cccccc");
+        } else if (freeFunds < 0) {
+            labels.push("Przekroczenie budżetu");
+            data.push(Math.abs(freeFunds));
+            backgroundColors.push("#ff4d4d"); // czerwony
+        }
+
+        new Chart(canvas, {
+            type: "doughnut",
+            data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColors
+            }]
+            },
+            options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                position: "bottom"
+                },
+                tooltip: {
+                callbacks: {
+                    label: context => `${context.label}: ${context.parsed} zł`
+                }
+                }
+            }
+            }
+        });
+    }
 });
+
+

@@ -19,7 +19,7 @@
                 Kategorie i wydatki
             {% endif %}
         </h4>
-    <!-- Kategorie -->
+    <!-- KATEGORIE -->
       {% for c in category_data %}
         <div class="mb-3 p-2 category-box" data-color="{{ c.color }}">
           <div class="d-flex justify-content-between align-items-center">
@@ -63,6 +63,23 @@
           </div>
         </div>
       {% endfor %}
+
+      <!-- WYKRES KOŁOWY -->
+      <h4>
+            {% if selected_budget %}
+                Wykres kołowy dla {{ "%04d" | format(selected_budget.year) }}/{{ "%02d" | format(selected_budget.month) }}
+            {% else %}
+                Kategorie i wydatki
+            {% endif %}
+        </h4>
+        <script>
+          const categoryData = {{ category_data | tojson }};
+          const budgetIncome = {{ selected_budget.income if selected_budget else 0 }};
+          const totalIncome = {{ selected_budget.income }};
+        </script>
+
+        <canvas id="expensesDoughnutChart" width="400" height="400"></canvas>
+
     </div>
 
     <!-- Prawa kolumna: Historia budżetów -->
